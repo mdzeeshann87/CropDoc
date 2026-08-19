@@ -1,0 +1,7 @@
+flask>=3.0
+pillow>=10.0
+numpy>=1.26
+
+# Optional — only needed if you train and use a real CNN via train_model.py.
+# Uncomment to install:
+# tensorflow>=2.15
