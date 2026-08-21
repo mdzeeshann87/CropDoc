@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CropDoc — Field Diagnostic Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="grain-overlay"></div>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <path d="M16 29c-7-2-11-8-11-16 0-3 1-6 2-8 3 2 6 2 9 1 3 1 6 1 9-1 1 2 2 5 2 8 0 8-4 14-11 16z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M16 29V10" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </span>
+      <span class="brand-word">CropDoc</span>
+    </div>
+    <nav class="header-nav">
+      <a href="#lab">Diagnose</a>
+      <a href="#how">How it works</a>
+      <a href="#crops">Supported crops</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO / LAB -->
+  <section class="hero wrap" id="lab">
+    <div class="hero-copy">
+      <p class="eyebrow">FIELD DIAGNOSTIC LAB · v1.0</p>
+      <h1 class="display">Point your camera.<br>Know the disease.</h1>
+      <p class="lede">
+        Upload a photo of a leaf and CropDoc reads its color and texture signature —
+        chlorosis, necrotic spotting, canopy browning — to flag the most likely disease
+        in seconds, with a treatment plan attached.
+      </p>
+      <div class="stat-row" role="list">
+        <div class="stat" role="listitem"><span class="stat-num">5</span><span class="stat-label">Crop species</span></div>
+        <div class="stat" role="listitem"><span class="stat-num">17</span><span class="stat-label">Diagnoses</span></div>
+        <div class="stat" role="listitem"><span class="stat-num">&lt;2s</span><span class="stat-label">Per scan</span></div>
+      </div>
+    </div>
+
+    <div class="lab-panel">
+      <div class="panel-frame">
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
+
+        <form id="scan-form">
+          <label class="field-label" for="crop-select">Crop species</label>
+          <select id="crop-select" name="crop">
+            {% for key, label in crops %}
+              <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload a leaf photo">
+            <div id="dz-empty" class="dz-empty">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              <p><strong>Drop a leaf photo</strong> or click to browse</p>
+              <p class="dz-hint">JPG, PNG, or WEBP — under 8MB</p>
+            </div>
+            <div id="dz-preview" class="dz-preview hidden">
+              <img id="preview-img" alt="Uploaded leaf preview" />
+              <div id="scan-sweep" class="scan-sweep"></div>
+              <div id="scan-readout" class="scan-readout"></div>
+            </div>
+            <input type="file" id="file-input" name="image" accept="image/png, image/jpeg, image/webp" hidden />
+          </div>
+
+          <button type="submit" id="analyze-btn" class="btn-primary" disabled>
+            <span class="btn-label">Run diagnosis</span>
+          </button>
+          <p id="form-error" class="form-error hidden"></p>
+        </form>
+      </div>
+      <p class="panel-caption">Sample readout — not a substitute for a licensed agronomist.</p>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="results wrap hidden" id="results">
+    <div class="results-grid">
+      <div class="result-image-col">
+        <img id="result-img" alt="Analyzed leaf" />
+        <div class="feature-strip" id="feature-strip"></div>
+      </div>
+
+      <div class="result-main">
+        <div class="result-head">
+          <p class="eyebrow" id="result-crop-label">TOMATO · SPECIMEN 001</p>
+          <h2 class="display" id="result-name">—</h2>
+          <div class="confidence-row">
+            <div class="confidence-bar"><div class="confidence-fill" id="confidence-fill"></div></div>
+            <span class="confidence-num" id="confidence-num">0%</span>
+          </div>
+          <span class="severity-chip" id="severity-chip">—</span>
+        </div>
+
+        <p class="result-summary" id="result-summary"></p>
+
+        <div class="detail-grid">
+          <div class="detail-card">
+            <h3>Symptoms observed</h3>
+            <ul id="symptom-list"></ul>
+          </div>
+          <div class="detail-card">
+            <h3>Likely cause</h3>
+            <p id="cause-text"></p>
+          </div>
+          <div class="detail-card">
+            <h3>Treat it</h3>
+            <ul id="treatment-list"></ul>
+          </div>
+          <div class="detail-card">
+            <h3>Prevent it next season</h3>
+            <ul id="prevention-list"></ul>
+          </div>
+        </div>
+
+        <div class="alternatives" id="alternatives">
+          <h3>Other possibilities considered</h3>
+          <div class="alt-row" id="alt-row"></div>
+        </div>
+
+        <button class="btn-ghost" id="scan-again">Scan another leaf</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how wrap" id="how">
+    <p class="eyebrow">THE PROCESS</p>
+    <h2 class="display section-title">Scan. Analyze. Treat.</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h3>Scan</h3>
+        <p>Photograph a single leaf in even light — the top surface, no shadow across the lesion.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h3>Analyze</h3>
+        <p>CropDoc reads chlorophyll coverage, browning, chlorosis, and lesion texture against known disease signatures.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h3>Treat</h3>
+        <p>Get a ranked diagnosis with symptoms, likely cause, and a concrete treatment and prevention plan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPORTED CROPS -->
+  <section class="crops wrap" id="crops">
+    <p class="eyebrow">COVERAGE</p>
+    <h2 class="display section-title">Supported crops</h2>
+    <div class="crop-grid">
+      {% for key, label in crops %}
+      <div class="crop-card" data-crop="{{ key }}">
+        <span class="crop-index">{{ loop.index }}</span>
+        <span class="crop-name">{{ label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-row">
+    <span>CropDoc Field Diagnostic Lab</span>
+    <span class="footer-note">Demo analyzer · not a substitute for professional plant pathology advice</span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
