@@ -4,7 +4,13 @@ A Flask web app that diagnoses crop leaf diseases from a photo: upload a leaf
 image, pick the crop species, and get a ranked diagnosis with symptoms,
 likely cause, treatment, and prevention steps.
 
-## Run it
+## Live Demo
+
+Try it here: **[https://cropdoc-yj8t.onrender.com](https://cropdoc-yj8t.onrender.com)**
+
+> Note: hosted on Render's free tier — the app may take ~50 seconds to wake up if it's been idle.
+
+## Run it locally 
 
 ```bash
 pip install -r requirements.txt
